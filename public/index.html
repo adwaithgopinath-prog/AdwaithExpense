@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aura Auth System</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+    <!-- PDF Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  </head>
+  <body>
+    <div class="dynamic-background">
+      <div class="glow-orb orb-1"></div>
+      <div class="glow-orb orb-2"></div>
+      <div class="glow-orb orb-3"></div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <main class="glass-container">
+      <!-- Auth View -->
+      <section id="auth-view" class="view active">
+        <h1 class="brand-title">AURA <span class="highlight">SECURE</span></h1>
+
+        <div class="tabs">
+          <button class="tab-btn active" id="tab-login" onclick="showAuthTab('login')">Login</button>
+          <button class="tab-btn" id="tab-register" onclick="showAuthTab('register')">Register</button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <div id="login-panel">
+          <form id="login-form">
+            <div class="input-group">
+              <input type="email" id="login-email" required placeholder=" " />
+              <label>Email Address</label>
+            </div>
+            <div class="input-group">
+              <input type="password" id="login-password" required placeholder=" " />
+              <label>Password</label>
+              <a href="#" class="forgot-link">Forgot?</a>
+            </div>
+            <button type="submit" class="btn primary-btn">Login</button>
+
+            <div class="divider"><span>OR</span></div>
+
+            <div class="social-login">
+              <a href="/api/auth/google" class="btn social-btn google">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                Google
+              </a>
+              <a href="/api/auth/github" class="btn social-btn github">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                  <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.699-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.907-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.03-2.682-.103-.254-.447-1.27.098-2.646 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.376.202 2.394.1 2.646.64.699 1.026 1.591 1.026 2.682 0 3.841-2.337 4.687-4.565 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.161 22 16.416 22 12c0-5.523-4.477-10-10-10z"/>
+                </svg>
+                GitHub
+              </a>
+            </div>
+          </form>
+        </div>
+
+        <!-- REGISTER FORM -->
+        <div id="register-panel" style="display:none;">
+          <form id="register-form">
+            <div class="input-group">
+              <input type="text" id="reg-name" required placeholder=" " />
+              <label>Full Name</label>
+            </div>
+            <div class="input-group">
+              <input type="email" id="reg-email" required placeholder=" " />
+              <label>Email Address</label>
+            </div>
+            <div class="input-group">
+              <input type="password" id="reg-password" required placeholder=" " minlength="6" />
+              <label>Password (min 6 chars)</label>
+            </div>
+            <button type="submit" id="register-submit-btn" class="btn primary-btn">Create Account</button>
+            <p style="text-align:center; margin-top:1rem; color:var(--text-secondary); font-size:0.85rem;">
+              Already have an account? <a href="#" onclick="showAuthTab('login')" style="color:var(--accent);">Log in</a>
+            </p>
+          </form>
+        </div>
+
+      </section>
+
+      <!-- 2FA Verify View -->
+      <section id="two-factor-view" class="view hidden">
+        <div class="back-nav" onclick="switchView('auth-view')">
+          ← Back to login
+        </div>
+        <h2>Two-Factor Auth</h2>
+        <p>Please enter the code from your authenticator app.</p>
+        <form id="two-factor-form">
+          <div class="input-group">
+            <input
+              type="text"
+              id="two-factor-code"
+              required
+              placeholder=" "
+              maxlength="6"
+            />
+            <label>6-Digit Code</label>
+          </div>
+          <button type="submit" class="btn primary-btn">Verify</button>
+        </form>
+      </section>
+
+        <!-- Dashboard View -->
+        <section id="dashboard-view" class="view hidden">
+            <!-- Theme Toggle -->
+            <div style="position: fixed; top: 1.5rem; right: 1.5rem; z-index: 5000; display: flex; gap: 10px; align-items: center;">
+                <div id="notification-bell" class="bell-icon" style="cursor:pointer; position:relative;">
+                    🔔
+                    <span id="notif-badge" style="position:absolute; top:-5px; right:-5px; background:var(--danger); color:white; font-size:0.6rem; padding:1px 4px; border-radius:50%; display:none;">0</span>
+                </div>
+                <button id="theme-toggle-btn" class="btn outline-btn" style="padding: 0.5rem 1rem; border-radius: 50%; min-width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; background: var(--bg-card);">
+                    🌙
+                </button>
+            </div>
+
+            <header class="dashboard-header">
+                <h2>Welcome, <span id="user-name-disp">User</span> 👋</h2>
+                <div class="dash-nav-tabs">
+                    <button class="dash-tab-btn active" data-target="dash-expenses">Expenses</button>
+                    <button class="dash-tab-btn" data-target="dash-income">Income</button>
+                    <button class="dash-tab-btn" data-target="dash-report">Analytics</button>
+                    <button class="dash-tab-btn" data-target="dash-profile">Profile &amp; Security</button>
+                </div>
+                <button class="btn logout-btn" id="logout-btn">Log Out</button>
+            </header>
+            
+            <div id="dash-profile" class="dashboard-content hidden">
+                <div class="dashboard-grid">
+                    <!-- Profile Card -->
+          <div class="card profile-card">
+            <h3>Profile Management</h3>
+            <form id="profile-form">
+              <div class="input-group">
+                <input type="text" id="prof-name" required placeholder=" " />
+                <label>Holographic Alias (Name)</label>
+              </div>
+              <button type="submit" class="btn outline-btn">
+                Update Profile
+              </button>
+            </form>
+
+            <hr class="card-divider" />
+
+            <h3>Change Password</h3>
+            <form id="password-form">
+              <div class="input-group">
+                <input
+                  type="password"
+                  id="current-pwd"
+                  required
+                  placeholder=" "
+                />
+                <label>Current Password</label>
+              </div>
+              <div class="input-group">
+                <input type="password" id="new-pwd" required placeholder=" " />
+                <label>New Password</label>
+              </div>
+              <button type="submit" class="btn outline-btn">
+                Update Password
+              </button>
+            </form>
+          </div>
+
+          <!-- Security / Sessions Card -->
+          <div class="card security-card">
+            <h3>Security Settings</h3>
+            <div class="setting-item">
+              <div>
+                <strong>Two-Factor Authentication</strong>
+                <p class="subtext">
+                  Protect your account with an extra layer of security.
+                </p>
+              </div>
+              <button id="enable-2fa-btn" class="btn action-btn">Setup</button>
+            </div>
+
+            <div id="setup-2fa-area" class="hidden setup-box">
+              <img id="qr-code-img" src="" alt="QR Code" />
+              <p>
+                Secret: <span id="secret-key" class="highlight-text"></span>
+              </p>
+              <div class="input-group" style="margin-top: 15px">
+                <input type="text" id="verify-2fa-code" placeholder=" " />
+                <label>Enter Code to Confirm</label>
+              </div>
+              <button id="confirm-2fa-btn" class="btn primary-btn">
+                Confirm Activation
+              </button>
+            </div>
+
+                    <hr class="card-divider">
+                    
+                    <h3>Active Devices</h3>
+                    <div id="devices-list" class="device-list">
+                        <!-- Devices injected dynamically -->
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <!-- Expenses Content -->
+            <div id="dash-expenses" class="dashboard-content active">
+                <div class="expenses-header">
+                    <h3>Your Expenses</h3>
+                    <button id="add-expense-btn" class="btn primary-btn">+ Add Expense</button>
+                </div>
+                
+                <div class="expenses-stats">
+                    <div class="stat-card">
+                        <h4>Total Spent</h4>
+                        <p class="stat-amount" id="total-spent-disp">$0.00</p>
+                    </div>
+                    <div class="stat-card" id="health-score-card" style="border-left: 4px solid var(--accent);">
+                        <h4>Financial Health</h4>
+                        <p class="stat-amount" id="health-score-disp">--/100</p>
+                    </div>
+                </div>
+
+                <!-- Search & Filters -->
+                <div class="filter-bar" style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;">
+                    <div class="input-group" style="flex: 2; min-width: 250px;">
+                        <input type="text" id="search-expenses" placeholder=" " oninput="window.filterTransactions()">
+                        <label>Search expenses...</label>
+                    </div>
+                    <div class="input-group" style="flex: 1; min-width: 150px;">
+                        <select id="filter-cat-expense" onchange="window.filterTransactions()">
+                            <option value="All">All Categories</option>
+                            <option value="Food">Food</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Shopping">Shopping</option>
+                            <option value="Bills">Bills</option>
+                            <option value="Entertainment">Entertainment</option>
+                        </select>
+                    </div>
+                    <div class="export-group" style="display: flex; gap: 0.5rem;">
+                        <button class="btn outline-btn" onclick="window.exportData('csv', 'expenses')">📊 CSV</button>
+                        <button class="btn outline-btn" onclick="window.exportData('pdf', 'expenses')">📄 PDF</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="excel-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Category</th>
+                                <th>Description</th>
+                                <th>Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expenses-list">
+                            <!-- Rows injected dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Income Content -->
+            <div id="dash-income" class="dashboard-content hidden">
+                <div class="expenses-header">
+                    <h3>Your Income</h3>
+                    <button id="add-income-btn" class="btn income-add-btn">+ Add Income</button>
+                </div>
+
+                <div class="expenses-stats">
+                    <div class="stat-card income-stat">
+                        <h4>Total Income</h4>
+                        <p class="stat-amount" id="total-income-disp" style="color:var(--success)">$0.00</p>
+                    </div>
+                    <div class="stat-card balance-stat">
+                        <h4>Net Balance</h4>
+                        <p class="stat-amount" id="net-balance-disp" style="color:var(--accent)">$0.00</p>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="excel-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Category</th>
+                                <th>Source</th>
+                                <th>Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="income-list">
+                            <!-- Rows injected dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Analytics Dashboard -->
+            <div id="dash-report" class="dashboard-content hidden">
+                <div class="expenses-header">
+                    <h3>Analytics Dashboard</h3>
+                    <button class="btn outline-btn" style="width:auto;padding:0.5rem 1rem;" onclick="if(typeof window.fetchIncomeReport === 'function') window.fetchIncomeReport()">↻ Refresh</button>
+                </div>
+                
+                <div class="analytics-grid">
+                    <div class="card chart-card">
+                        <h4>Category Breakdown (Expenses)</h4>
+                        <canvas id="category-pie-chart"></canvas>
+                    </div>
+                    <div class="card chart-card">
+                        <h4>Monthly Trend (Income vs Exp)</h4>
+                        <canvas id="monthly-trend-chart"></canvas>
+                    </div>
+                    <div class="card chart-card" style="grid-column: 1 / -1;">
+                        <h4>Daily Spending (Last 7 Days)</h4>
+                        <canvas id="daily-spending-chart"></canvas>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+                    <div class="card ai-insights-card">
+                        <h3>🤖 AI Spending Insights</h3>
+                        <ul id="ai-insights-list" style="margin-top: 1rem; padding-left: 1.5rem; color: var(--text-secondary); line-height: 1.8;">
+                            <li>Analyzing your data...</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card prediction-card">
+                        <h3>🔮 Future Predictions</h3>
+                        <div id="ai-prediction-content" style="margin-top: 1rem; color: var(--text-secondary); line-height: 1.8;">
+                            <p>Collecting historical data to generate predictions...</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="monthly-report-container" style="margin-top:2rem;"></div>
+            </div>
+        </section>
+
+        <!-- Expense Modal -->
+        <div id="expense-modal" class="modal hidden">
+            <div class="modal-content glass-container">
+                <span class="close-modal">&times;</span>
+                <h3 id="expense-modal-title">Add Expense</h3>
+
+                <!-- AI Power Actions (Consolidated) -->
+                <div class="scanner-btn-group" style="margin-bottom: 1rem; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                    <div title="Scan physical receipt photo">
+                        <input type="file" id="receipt-upload" accept="image/*" hidden>
+                        <button type="button" class="btn outline-btn" id="scan-receipt-btn" style="width:100%; padding: 0.7rem; font-size: 0.8rem;">
+                            📷 Scan
+                        </button>
+                    </div>
+                    <div title="Speak to log expense">
+                        <button type="button" class="btn outline-btn" id="voice-log-btn" style="width:100%; padding: 0.7rem; font-size: 0.8rem; border-color: #f43f5e; color: #f43f5e;">
+                            🎤 Voice
+                        </button>
+                    </div>
+                    <div title="Auto-fill from bank SMS">
+                        <button type="button" class="btn outline-btn" id="sms-log-btn" onclick="window.simulateSMSOCR()" style="width:100%; padding: 0.7rem; font-size: 0.8rem; border-color: #ea580c; color: #ea580c;">
+                            📲 SMS
+                        </button>
+                    </div>
+                </div>
+                
+                <p id="voice-status" style="font-size: 0.7rem; color: #f43f5e; text-align: center; margin-bottom: 10px; display: none;">
+                    <span class="pulse-dot"></span> Listening to your voice...
+                </p>
+
+                <div id="scan-status" style="margin-bottom: 10px; font-size: 0.8rem; color: var(--accent); text-align: center; display:none;">
+                    <div class="spinner-small" style="display:inline-block; margin-right:5px;"></div> 
+                    AI reading receipt...
+                </div>
+
+
+                <form id="expense-form">
+                    <input type="hidden" id="exp-id">
+                    
+                    <div class="input-group" style="margin-bottom: 1rem;">
+                        <input type="number" id="exp-amount" required step="0.01" min="0" placeholder=" ">
+                        <label>Amount</label>
+                    </div>
+
+                    <div class="input-group">
+                        <select id="exp-category" required>
+                            <option value="Food">Food</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Shopping">Shopping</option>
+                            <option value="Bills">Bills</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Education">Education</option>
+                            <option value="Health">Health</option>
+                            <option value="Custom">Custom...</option>
+                            <option value="Other" selected>Other</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group hidden" id="custom-cat-group">
+                        <input type="text" id="exp-custom-cat" placeholder=" ">
+                        <label>Custom Category Name</label>
+                    </div>
+
+                    <div class="input-group">
+                        <input type="date" id="exp-date" required>
+                        <label style="position:static; padding-bottom:5px; display:block">Date</label>
+                    </div>
+                    
+                    <div class="input-group" style="margin-bottom:1rem;">
+                        <input type="text" id="exp-desc" placeholder=" ">
+                        <label>Notes / Description</label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="exp-recurring">
+                        <label for="exp-recurring">Is this a recurring expense?</label>
+                    </div>
+
+                    <div class="input-group hidden" id="recurring-interval-group" style="margin-top: 15px;">
+                        <select id="exp-recurring-interval">
+                            <option value="none">-- Select Interval --</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Yearly</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn primary-btn">Save Expense</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Income Modal -->
+    <div id="income-modal" class="modal hidden">
+        <div class="modal-content glass-container">
+            <span class="close-income-modal">&times;</span>
+            <h3 id="income-modal-title">Add Income</h3>
+            <form id="income-form">
+                <input type="hidden" id="inc-id">
+                
+                <!-- AI Power Actions for Income (Consolidated) -->
+                <div class="scanner-btn-group" style="margin-bottom: 1rem; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                    <div title="Scan physical receipt photo">
+                        <input type="file" id="income-upload" accept="image/*" hidden>
+                        <button type="button" class="btn outline-btn" id="scan-income-btn" style="width:100%; padding: 0.7rem; font-size: 0.8rem; border-color: #22c55e; color: #22c55e;">
+                            📷 Scan
+                        </button>
+                    </div>
+                    <div title="Speak to log income">
+                        <button type="button" class="btn outline-btn" id="voice-log-income-btn" style="width:100%; padding: 0.7rem; font-size: 0.8rem; border-color: #f43f5e; color: #f43f5e;">
+                            🎤 Voice
+                        </button>
+                    </div>
+                    <div title="Auto-fill from bank SMS">
+                        <button type="button" class="btn outline-btn" id="sms-log-income-btn" onclick="window.simulateSMSOCR('income')" style="width:100%; padding: 0.7rem; font-size: 0.8rem; border-color: #ea580c; color: #ea580c;">
+                            📲 SMS
+                        </button>
+                    </div>
+                </div>
+
+                <p id="voice-status-income" style="font-size: 0.7rem; color: #f43f5e; text-align: center; margin-bottom: 10px; display: none;">
+                    <span class="pulse-dot"></span> Listening to your voice...
+                </p>
+
+                <div id="scan-status-income" style="margin-bottom: 10px; font-size: 0.8rem; color: var(--success); text-align: center; display:none;">
+                    <div class="spinner-small" style="display:inline-block; margin-right:5px; border-top-color: var(--success);"></div> 
+                    AI reading deposit proof...
+                </div>
+
+                <div class="input-group">
+                    <input type="number" id="inc-amount" required step="0.01" min="0" placeholder=" ">
+                    <label>Amount</label>
+                </div>
+
+                <div class="input-group">
+                    <select id="inc-category" required>
+                        <option value="Salary">💼 Salary</option>
+                        <option value="Freelance">💻 Freelance</option>
+                        <option value="Business">🏢 Business</option>
+                        <option value="Investment">📈 Investment</option>
+                        <option value="Side Income">⚡ Side Income</option>
+                        <option value="Gift">🎁 Gift</option>
+                        <option value="Other" selected>📦 Other</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <input type="text" id="inc-source" placeholder=" ">
+                    <label>Source (e.g. Company Name)</label>
+                </div>
+
+                <div class="input-group">
+                    <input type="date" id="inc-date" required>
+                    <label style="position:static; padding-bottom:5px; display:block">Date</label>
+                </div>
+
+                <div class="input-group">
+                    <input type="text" id="inc-desc" placeholder=" ">
+                    <label>Notes / Description</label>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="inc-recurring">
+                    <label for="inc-recurring">Is this a recurring income?</label>
+                </div>
+
+                <div class="input-group hidden" id="inc-recurring-interval-group" style="margin-top: 15px;">
+                    <select id="inc-recurring-interval">
+                        <option value="none">-- Select Interval --</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="bi-weekly">Bi-Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                </div>
+
+                <button type="submit" id="income-submit-btn" class="btn income-add-btn">Save Income</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
