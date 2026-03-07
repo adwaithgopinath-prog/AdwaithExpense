@@ -56,101 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-function generateAIInsights(expenses, incomes, catData, sortedMonths, monthMap, dailyMap) {
-    const insightsList = document.getElementById('ai-insights-list');
-    if (!insightsList) return;
-    insightsList.innerHTML = '';
-    
-    const insights = [];
-    
-    // 1. Category Trends (e.g. You spend 40% of your budget on food)
-    const totalExpenses = Object.values(catData).reduce((sum, val) => sum + val, 0);
-    if (totalExpenses > 0) {
-        // Find top category
-        let topCat = '';
-        let topCatAmount = 0;
-        for (const [cat, amt] of Object.entries(catData)) {
-            if (amt > topCatAmount) { topCat = cat; topCatAmount = amt; }
-        }
-        const percent = Math.round((topCatAmount / totalExpenses) * 100);
-        if (percent >= 20) {
-            insights.push(`You spend <strong>${percent}%</strong> of your budget on <strong>${topCat}</strong>.`);
-        }
-    }
-
-    // 2. Unusual Spending (e.g. Your spending increases on weekends)
-    let weekendTotal = 0;
-    let weekdayTotal = 0;
-    let weekendDays = 0;
-    let weekdayDays = 0;
-    
-    expenses.forEach(e => {
-        const day = new Date(e.date).getDay(); // 0 is Sunday, 6 is Saturday
-        if (day === 0 || day === 6) {
-            weekendTotal += e.amount;
-            weekendDays++;
-        } else {
-            weekdayTotal += e.amount;
-            weekdayDays++;
-        }
-    });
-    
-    if (weekendDays > 0 && weekdayDays > 0) {
-        const avgWeekend = weekendTotal / weekendDays;
-        const avgWeekday = weekdayTotal / weekdayDays;
-        if (avgWeekend > (avgWeekday * 1.3)) {
-            insights.push(`Your spending increases significantly on <strong>weekends</strong> (avg $${avgWeekend.toFixed(2)}/day vs $${avgWeekday.toFixed(2)}/day).`);
-        } else if (avgWeekday > (avgWeekend * 1.3)) {
-            insights.push(`You tend to spend more during the <strong>weekdays</strong> than on weekends.`);
-        }
-    }
-
-    // 3. Month over Month trend (e.g. Transport spending increased by 15% this month)
-    if (sortedMonths.length >= 2) {
-        const lastMonthKey = sortedMonths[sortedMonths.length - 1];
-        const prevMonthKey = sortedMonths[sortedMonths.length - 2];
-        
-        const currentExp = monthMap[lastMonthKey].exp;
-        const prevExp = monthMap[prevMonthKey].exp;
-        
-        if (prevExp > 0) {
-            const percentChange = Math.round(((currentExp - prevExp) / prevExp) * 100);
-            if (percentChange > 0) {
-                insights.push(`Your overall spending <strong>increased by ${percentChange}%</strong> this month compared to last month.`);
-            } else if (percentChange < 0) {
-                insights.push(`Great job! Your overall spending <strong>decreased by ${Math.abs(percentChange)}%</strong> this month.`);
-            }
-        }
-    }
-
-    // 4. Savings / General
-    const totalIncome = incomes.reduce((sum, val) => sum + val.amount, 0);
-    if (totalIncome > 0 && totalExpenses > 0) {
-        const savingsRate = Math.round(((totalIncome - totalExpenses) / totalIncome) * 100);
-        if (savingsRate > 20) {
-             insights.push(`Excellent! You are saving <strong>${savingsRate}%</strong> of your tracked income.`);
-        } else if (savingsRate < 0) {
-             insights.push(`Warning: You are currently spending more than your tracked income.`);
-        }
-    }
-    
-    // Fallback if no insights generated
-    if (insights.length === 0) {
-        if (expenses.length === 0) {
-            insights.push(`Add some expenses and income to get AI-powered insights!`);
-        } else {
-             insights.push(`Keep adding transactions. We need more data to generate consistent patterns.`);
-        }
-    }
-
-    // Render to list
-    insights.forEach(insight => {
-        insightsList.innerHTML += `<li style=\"margin-bottom: 0.5rem;\">✧ ${insight}</li>`;
-    });
-
-    // Calculate Health Score
-    calculateHealthScore(totalExpenses, totalIncome, catData);
-}
 
 function calculateHealthScore(expenses, income, catData) {
     const scoreDisp = document.getElementById('health-score-disp');
@@ -875,8 +780,19 @@ window.fetchExpenses = async () => {
             const list = document.getElementById('expenses-list');
             list.innerHTML = '';
             let total = 0;
+            let todayTotal = 0;
+            let yesterdayTotal = 0;
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+            const yesterday = new Date(); yesterday.setDate(now.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+
             expenses.forEach(e => {
                 total += e.amount;
+                const eDate = new Date(e.date).toISOString().split('T')[0];
+                if(eDate === todayStr) todayTotal += e.amount;
+                else if(eDate === yesterdayStr) yesterdayTotal += e.amount;
+
                 list.innerHTML += `
                     <tr>
                         <td class="cell-date">${new Date(e.date).toLocaleDateString()}</td>
@@ -910,6 +826,17 @@ window.fetchExpenses = async () => {
     }
 
             document.getElementById('total-spent-disp').innerText = '$' + total.toFixed(2);
+            document.getElementById('today-spent-disp').innerText = '$' + todayTotal.toFixed(2);
+            document.getElementById('yesterday-spent-disp').innerText = '$' + yesterdayTotal.toFixed(2);
+            
+            // Highlight color based on comparison
+            const todayDisp = document.getElementById('today-spent-disp');
+            if (todayTotal > yesterdayTotal && yesterdayTotal > 0) {
+                todayDisp.style.color = 'var(--danger)';
+            } else if (todayTotal < yesterdayTotal && todayTotal > 0) {
+                todayDisp.style.color = 'var(--success)';
+            }
+
             totalExpensesGlobal = total;
             checkBudgetAlerts(total);
             updateNetBalance();
@@ -1119,6 +1046,46 @@ window.fetchIncomeReport = async () => {
                     borderRadius: 6
                 }]
             }, { scales: { y: { beginAtZero: true } } });
+
+            // --- 3b. Day by Day Comparison (Current vs Previous Week) ---
+            const currentWeekMap = {};
+            const previousWeekMap = {};
+            const comparisonDays = [];
+            
+            for(let i=6; i>=0; i--) {
+                const d = new Date(); d.setDate(d.getDate() - i);
+                const dStr = d.toISOString().split('T')[0];
+                currentWeekMap[dStr] = 0;
+                comparisonDays.push(d.toLocaleString('default', { weekday: 'short' }) + ' ' + d.getDate());
+                
+                const prevD = new Date(); prevD.setDate(prevD.getDate() - (i + 7));
+                const prevDStr = prevD.toISOString().split('T')[0];
+                previousWeekMap[prevDStr] = 0;
+            }
+
+            expenses.forEach(e => {
+                const dStr = new Date(e.date).toISOString().split('T')[0];
+                if(currentWeekMap[dStr] !== undefined) currentWeekMap[dStr] += e.amount;
+                if(previousWeekMap[dStr] !== undefined) previousWeekMap[dStr] += e.amount;
+            });
+
+            renderChart('day-comparison-chart', 'bar', {
+                labels: comparisonDays,
+                datasets: [
+                    {
+                        label: 'Current 7 Days',
+                        data: Object.values(currentWeekMap),
+                        backgroundColor: '#6366f1',
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Previous 7 Days',
+                        data: Object.values(previousWeekMap),
+                        backgroundColor: '#94a3b888',
+                        borderRadius: 4
+                    }
+                ]
+            }, { scales: { y: { beginAtZero: true } } });
             
             // Include the detailed day-wise report
             const container = document.getElementById('monthly-report-container');
@@ -1165,7 +1132,7 @@ window.fetchIncomeReport = async () => {
             }
             
             // --- 4. AI Insights Generation ---
-            generateAIInsights(expenses, incomes, catData, sortedMonths, monthMap, dailyMap);
+            generateAIInsights(expenses, incomes, catData, sortedMonths, monthMap, dailyMap, currentWeekMap, previousWeekMap);
             
         }
     } catch(err) { 
@@ -1198,7 +1165,7 @@ function renderChart(canvasId, type, data, extraOptions = {}) {
     });
 }
 
-function generateAIInsights(expenses, incomes, catData, sortedMonths, monthMap, dailyMap) {
+function generateAIInsights(expenses, incomes, catData, sortedMonths, monthMap, dailyMap, currentWeekMap, previousWeekMap) {
     const insightsList = document.getElementById('ai-insights-list');
     if (!insightsList) return;
     insightsList.innerHTML = '';
@@ -1238,6 +1205,19 @@ function generateAIInsights(expenses, incomes, catData, sortedMonths, monthMap, 
             insights.push(`Your spending increases significantly on <strong>weekends</strong> (avg $${avgWeekend.toFixed(2)}/day).`);
         } else if (avgWeekday > (avgWeekend * 1.3)) {
             insights.push(`You tend to spend more during the <strong>weekdays</strong> than on weekends.`);
+        }
+    }
+
+    // 2b. Week vs Week comparison insight
+    const currentWeekTotal = Object.values(currentWeekMap).reduce((a, b) => a + b, 0);
+    const previousWeekTotal = Object.values(previousWeekMap).reduce((a, b) => a + b, 0);
+    if(previousWeekTotal > 0 && currentWeekTotal > 0) {
+        const diff = currentWeekTotal - previousWeekTotal;
+        const percent = Math.round((Math.abs(diff) / previousWeekTotal) * 100);
+        if(diff > 0 && percent >= 10) {
+            insights.push(`Your spending this week is <strong>${percent}% higher</strong> ($${currentWeekTotal.toFixed(2)}) compared to last week ($${previousWeekTotal.toFixed(2)}).`);
+        } else if(diff < 0 && percent >= 10) {
+            insights.push(`Great job! You spent <strong>${percent}% less</strong> this week ($${currentWeekTotal.toFixed(2)}) compared to last week ($${previousWeekTotal.toFixed(2)}).`);
         }
     }
 
