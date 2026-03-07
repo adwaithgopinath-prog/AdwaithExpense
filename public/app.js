@@ -1130,20 +1130,32 @@ window.fetchIncomeReport = async () => {
                             </div>`;
                     });
 
-                    container.innerHTML += `
-                        <div class=\"report-month-card\" style=\"margin-bottom:2rem;\">
-                            <h4 style=\"border-bottom: 1px solid var(--accent); padding-bottom:0.5rem;\">
-                                ${monthKey} 
-                                <div style=\"text-align:right;\">
-                                    <span style=\"color:var(--success); font-size:1.1rem;\">+$${data.inc.toFixed(2)}</span><br>
-                                    <span style=\"color:var(--danger); font-size:1.1rem;\">-$${data.exp.toFixed(2)}</span>
-                                </div>
-                            </h4>
-                            <div style=\"margin-top:1rem;\">
-                                <h5 style=\"color:var(--text-secondary); font-size:0.8rem; margin-bottom:0.5rem; text-transform:uppercase;\">Day-wise Summary:</h5>
-                                ${dailyHtml}
+                    // Add dynamic totals after the daily entries
+                    dailyHtml += `
+                        <div style=\"display:flex; justify-content:space-between; padding:0.8rem 0.6rem; margin-top: 5px; background: rgba(255,255,255,0.03); border-radius: 8px; font-weight:700; border-top: 1px solid var(--accent);\">
+                            <span style=\"color:var(--accent);\">${monthKey} Total</span>
+                            <div style=\"display:flex; gap:1rem;\">
+                                <span style=\"color:var(--success);\">+$${data.inc.toFixed(2)}</span>
+                                <span style=\"color:var(--danger);\">-$${data.exp.toFixed(2)}</span>
                             </div>
                         </div>`;
+
+                    container.innerHTML += `
+                        <details class=\"report-month-card\" style=\"margin-bottom:1.5rem; outline: none;\">
+                            <summary style=\"list-style: none; cursor: pointer; padding-bottom: 0.5rem;\">
+                                <h4 style=\"border-bottom: 1px solid var(--accent); padding-bottom:0.5rem; display: flex; justify-content: space-between; align-items: center;\">
+                                    <span>🔽 ${monthKey} Breakdown</span> 
+                                    <div style=\"text-align:right;\">
+                                        <span style=\"color:var(--success); font-size:1.1rem;\">+$${data.inc.toFixed(2)}</span> / 
+                                        <span style=\"color:var(--danger); font-size:1.1rem;\">-$${data.exp.toFixed(2)}</span>
+                                    </div>
+                                </h4>
+                            </summary>
+                            <div style=\"margin-top:0.5rem; padding: 0.5rem;\">
+                                <h5 style=\"color:var(--text-secondary); font-size:0.8rem; margin-bottom:1rem; text-transform:uppercase; letter-spacing: 1px;\">📅 Day-by-Day Historical Log:</h5>
+                                ${dailyHtml}
+                            </div>
+                        </details>`;
                 });
                 sortedMonths.reverse(); // Reset order back for other logic
             }
