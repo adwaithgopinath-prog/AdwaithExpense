@@ -330,6 +330,17 @@
                     <button class="btn outline-btn" style="width:auto;padding:0.5rem 1rem;" onclick="if(typeof window.fetchIncomeReport === 'function') window.fetchIncomeReport()">↻ Refresh</button>
                 </div>
                 
+                <div class="analytics-header-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                    <div class="card" style="border-left: 4px solid var(--success); text-align: center; padding: 1rem;">
+                        <h5 style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 0.5rem;">Today's Income</h5>
+                        <p id="ana-today-income" style="font-size: 1.5rem; font-weight: 700; color: var(--success);">$0.00</p>
+                    </div>
+                    <div class="card" style="border-left: 4px solid var(--danger); text-align: center; padding: 1rem;">
+                        <h5 style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 0.5rem;">Today's Expense</h5>
+                        <p id="ana-today-expense" style="font-size: 1.5rem; font-weight: 700; color: var(--danger);">$0.00</p>
+                    </div>
+                </div>
+
                 <div class="analytics-grid">
                     <div class="card chart-card">
                         <h4>Category Breakdown (Expenses)</h4>

@@ -975,6 +975,23 @@ window.fetchIncomeReport = async () => {
             const expenses = await expRes.json();
             const incomes = await incRes.json();
             
+            // --- 0. Today's Summary (New Feature) ---
+            const todayStr = new Date().toISOString().split('T')[0];
+            let todayIncomeVal = 0;
+            let todayExpenseVal = 0;
+            
+            incomes.forEach(i => {
+                if (new Date(i.date).toISOString().split('T')[0] === todayStr) todayIncomeVal += i.amount;
+            });
+            expenses.forEach(e => {
+                if (new Date(e.date).toISOString().split('T')[0] === todayStr) todayExpenseVal += e.amount;
+            });
+            
+            const anaIncEl = document.getElementById('ana-today-income');
+            const anaExpEl = document.getElementById('ana-today-expense');
+            if(anaIncEl) anaIncEl.innerText = '$' + todayIncomeVal.toFixed(2);
+            if(anaExpEl) anaExpEl.innerText = '$' + todayExpenseVal.toFixed(2);
+
             // --- 1. Category Breakdown (Pie Chart) ---
             const catData = {};
             expenses.forEach(e => {
