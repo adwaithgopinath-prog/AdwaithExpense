@@ -91,16 +91,30 @@ function calculateHealthScore(expenses, income, catData) {
 window.filterTransactions = () => {
     const query = document.getElementById('search-expenses').value.toLowerCase();
     const category = document.getElementById('filter-cat-expense').value;
-    const rows = document.querySelectorAll('#expenses-list tr');
+    const groups = document.querySelectorAll('#expenses-collapsible-container .report-month-card');
 
-    rows.forEach(row => {
-        const text = row.innerText.toLowerCase();
-        const cat = row.querySelector('td:nth-child(2)').innerText;
-        
-        const matchesSearch = text.includes(query);
-        const matchesCat = category === 'All' || cat.includes(category);
+    groups.forEach(group => {
+        const rows = group.querySelectorAll('tbody tr');
+        let groupHasMatch = false;
 
-        row.style.display = (matchesSearch && matchesCat) ? '' : 'none';
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            const cat = row.querySelector('td:nth-child(2)').innerText;
+            
+            const matchesSearch = text.includes(query);
+            const matchesCat = category === 'All' || cat.includes(category);
+
+            if (matchesSearch && matchesCat) {
+                row.style.display = '';
+                groupHasMatch = true;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        // Hide the whole month if no rows inside match
+        group.style.display = groupHasMatch ? '' : 'none';
+        if (query || category !== 'All') group.open = groupHasMatch; // Auto-expand if searching
     });
 };
 
@@ -777,8 +791,9 @@ window.fetchExpenses = async () => {
         });
         if(res.ok) {
             const expenses = await res.json();
-            const list = document.getElementById('expenses-list');
-            list.innerHTML = '';
+            const container = document.getElementById('expenses-collapsible-container');
+            container.innerHTML = '';
+            
             let total = 0;
             let todayTotal = 0;
             let yesterdayTotal = 0;
@@ -787,13 +802,37 @@ window.fetchExpenses = async () => {
             const yesterday = new Date(); yesterday.setDate(now.getDate() - 1);
             const yesterdayStr = yesterday.toISOString().split('T')[0];
 
+            // Grouping by Month
+            const monthGroups = {};
+
             expenses.forEach(e => {
                 total += e.amount;
-                const eDate = new Date(e.date).toISOString().split('T')[0];
+                const dateObj = new Date(e.date);
+                const eDate = dateObj.toISOString().split('T')[0];
                 if(eDate === todayStr) todayTotal += e.amount;
                 else if(eDate === yesterdayStr) yesterdayTotal += e.amount;
 
-                list.innerHTML += `
+                const monthKey = dateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+                if (!monthGroups[monthKey]) monthGroups[monthKey] = { expenses: [], total: 0 };
+                monthGroups[monthKey].expenses.push(e);
+                monthGroups[monthKey].total += e.amount;
+            });
+
+            // If no expenses
+            if (expenses.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding:3rem; color:var(--text-secondary);">No expenses recorded yet.</p>';
+            }
+
+            // Render each month group
+            Object.keys(monthGroups).sort((a, b) => new Date(b) - new Date(a)).forEach(monthKey => {
+                const group = monthGroups[monthKey];
+                const detailEl = document.createElement('details');
+                detailEl.className = 'report-month-card';
+                detailEl.style.marginBottom = '1rem';
+                detailEl.style.outline = 'none';
+                if (monthKey === now.toLocaleString('default', { month: 'long', year: 'numeric' })) detailEl.open = true;
+
+                let rowHtml = group.expenses.map(e => `
                     <tr>
                         <td class="cell-date">${new Date(e.date).toLocaleDateString()}</td>
                         <td>
@@ -809,27 +848,52 @@ window.fetchExpenses = async () => {
                             </div>
                         </td>
                     </tr>
+                `).join('');
+
+                detailEl.innerHTML = `
+                    <summary style="list-style: none; cursor: pointer; padding-bottom: 0.5rem;">
+                        <h4 style="border-bottom: 1px solid var(--accent); padding-bottom:0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                            <span>🔽 ${monthKey}</span>
+                            <span style="color:var(--danger); font-size:1.1rem;">-$${group.total.toFixed(2)}</span>
+                        </h4>
+                    </summary>
+                    <div class="table-container" style="margin-top:0.5rem; background: transparent; border: none;">
+                        <table class="excel-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Category</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rowHtml}
+                            </tbody>
+                        </table>
+                    </div>
                 `;
+                container.appendChild(detailEl);
             });
-    function checkBudgetAlerts(totalSpent) {
-        const limit = 5000; // Sample hardcoded budget limit for now
-        if (totalSpent > limit) {
-            const badge = document.getElementById('notif-badge');
-            badge.style.display = 'block';
-            badge.innerText = '1';
-            
-            document.getElementById('notification-bell').onclick = () => {
-                alert(`⚠️ Budget Alert: You have spent $${totalSpent.toFixed(2)}, which exceeds your monthly limit of $${limit}.00!`);
-                badge.style.display = 'none';
-            };
-        }
-    }
+
+            function checkBudgetAlerts(totalSpent) {
+                const limit = 5000;
+                if (totalSpent > limit) {
+                    const badge = document.getElementById('notif-badge');
+                    badge.style.display = 'block';
+                    badge.innerText = '1';
+                    document.getElementById('notification-bell').onclick = () => {
+                        alert(`⚠️ Budget Alert: You have spent $${totalSpent.toFixed(2)}, which exceeds your monthly limit of $${limit}.00!`);
+                        badge.style.display = 'none';
+                    };
+                }
+            }
 
             document.getElementById('total-spent-disp').innerText = '$' + total.toFixed(2);
             document.getElementById('today-spent-disp').innerText = '$' + todayTotal.toFixed(2);
             document.getElementById('yesterday-spent-disp').innerText = '$' + yesterdayTotal.toFixed(2);
             
-            // Highlight color based on comparison
             const todayDisp = document.getElementById('today-spent-disp');
             if (todayTotal > yesterdayTotal && yesterdayTotal > 0) {
                 todayDisp.style.color = 'var(--danger)';
@@ -841,7 +905,9 @@ window.fetchExpenses = async () => {
             checkBudgetAlerts(total);
             updateNetBalance();
         }
-    } catch(err) {}
+    } catch(err) {
+        console.error('Error fetching expenses:', err);
+    }
 };
 
 window.editExpense = (e) => {
