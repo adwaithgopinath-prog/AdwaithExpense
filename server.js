@@ -39,9 +39,11 @@ mongoose
 const authRoutes = require("./routes/auth");
 const expenseRoutes = require('./routes/expenses');
 const incomeRoutes = require('./routes/income');
+const insightRoutes = require('./routes/insights');
 app.use("/api/auth", authRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/income', incomeRoutes);
+app.use('/api/insights', insightRoutes);
 
 // Frontend Route
 app.get("*", (req, res) => {

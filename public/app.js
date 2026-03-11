@@ -1031,6 +1031,7 @@ window.deleteIncome = async (id) => {
 let chartInstances = {};
 
 window.fetchIncomeReport = async () => {
+    fetchSmartInsights();
     try {
         const [expRes, incRes] = await Promise.all([
             fetch(EXPENSE_API_BASE, { headers: { 'Authorization': `Bearer ${authToken}` } }),
@@ -1228,7 +1229,7 @@ window.fetchIncomeReport = async () => {
             
             // --- 4. AI Insights Generation ---
             generateAIInsights(expenses, incomes, catData, sortedMonths, monthMap, dailyMap, currentWeekMap, previousWeekMap);
-            
+            fetchSmartInsights();
         }
     } catch(err) { 
         console.error(err);
@@ -1384,4 +1385,43 @@ function generateAIInsights(expenses, incomes, catData, sortedMonths, monthMap, 
     insights.forEach(insight => {
         insightsList.innerHTML += `<li style=\"margin-bottom: 0.5rem;\">✧ ${insight}</li>`;
     });
+}
+
+async function fetchSmartInsights() {
+    try {
+        const res = await fetch('/api/insights', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            
+            // Update UI elements
+            const avgDailyEl = document.getElementById('ana-avg-daily');
+            const topCatEl = document.getElementById('ana-top-category');
+            const compareEl = document.getElementById('ana-month-compare');
+            const insightsList = document.getElementById('ai-insights-list');
+
+            if (avgDailyEl) avgDailyEl.innerText = '$' + data.avgDailySpending;
+            if (topCatEl) topCatEl.innerText = `${data.highestCategory.category} ($${data.highestCategory.amount.toFixed(2)})`;
+            
+            if (compareEl) {
+                const diff = data.currentMonthTotal - data.lastMonthTotal;
+                const percent = data.lastMonthTotal > 0 ? ((diff / data.lastMonthTotal) * 100).toFixed(0) : 0;
+                compareEl.innerText = `${diff >= 0 ? '▲' : '▼'} ${Math.abs(percent)}% vs last month`;
+                compareEl.style.color = diff <= 0 ? 'var(--success)' : 'var(--danger)';
+            }
+
+            if (insightsList) {
+                // data.suggestions are appended to what generateAIInsights already created
+                data.suggestions.forEach(suggestion => {
+                    const li = document.createElement('li');
+                    li.style.marginBottom = '0.5rem';
+                    li.innerHTML = `✧ ${suggestion}`;
+                    insightsList.appendChild(li);
+                });
+            }
+        }
+    } catch (err) {
+        console.error('Error fetching smart insights:', err);
+    }
 }

@@ -914,3 +914,77 @@ select option {
     70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(244, 63, 94, 0); }
     100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
 }
+/* AI & Analytics Enhancements */
+.analytics-header-stats .card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: default;
+}
+
+.analytics-header-stats .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.ai-insights-card {
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.ai-insights-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.ai-insights-card h3, .ai-insights-card ul {
+    position: relative;
+    z-index: 1;
+}
+
+#ai-insights-list li {
+    list-style: none;
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+#ai-insights-list li::before {
+    content: '✦';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+    0% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+    100% { opacity: 0.5; transform: scale(1); }
+}
+
+.prediction-card {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8));
+    border-top: 4px solid var(--warning);
+}
+
+#ana-month-compare {
+    transition: all 0.3s ease;
+}
+
+/* Bell Icon Animation */
+.bell-icon:hover {
+    animation: ring 0.5s ease-in-out;
+}
+
+@keyframes ring {
+    0%, 100% { transform: rotate(0); }
+    25% { transform: rotate(15deg); }
+    50% { transform: rotate(-15deg); }
+    75% { transform: rotate(10deg); }
+}
